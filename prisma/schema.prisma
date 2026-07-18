@@ -1,0 +1,78 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Customer {
+  id                    String  @id @default(uuid())
+  name                  String
+  phone                 String? @unique
+  advanceWalletBalance  Float   @default(0.00)
+  legacyCementDueBags   Int     @default(0)
+  orders                Order[]
+}
+
+model Influencer {
+  id                String  @id @default(uuid())
+  name              String
+  phone             String? @unique
+  commissionBalance Float   @default(0.00)
+  orders            Order[]
+}
+
+model Product {
+  id             String  @id @default(uuid())
+  name           String
+  type           String  // 'INVENTORY' | 'DIRECT_INDENT'
+  phase          String  @default("DURING") // 'DURING' (construction) | 'AFTER' (construction)
+  baseCost       Float
+  standardMargin Float
+  hamaliRate     Float   @default(0.00)
+}
+
+model Order {
+  id               String      @id @default(uuid())
+  customer         Customer?   @relation(fields: [customerId], references: [id])
+  customerId       String?
+  influencer       Influencer? @relation(fields: [influencerId], references: [id])
+  influencerId     String?
+  totalAmount      Float
+  grossProfit      Float
+  hamaliCollected  Float
+  freightCollected Float
+  revenueDuring    Float       @default(0.00)
+  revenueAfter     Float       @default(0.00)
+  profitDuring     Float       @default(0.00)
+  profitAfter      Float       @default(0.00)
+  status           String      @default("QUOTATION") // 'QUOTATION' | 'PAID_READY' | 'DISPATCHED'
+  paymentMethod    String?     // 'CASH' | 'UPI' | 'ADVANCE_WALLET'
+  createdAt        DateTime    @default(now())
+}
+
+model Supplier {
+  id           String  @id @default(uuid())
+  name         String
+  isFrozen     Boolean @default(false)
+  legacyDebt   Float   @default(0.00)
+  activeCredit Float   @default(0.00)
+}
+
+model StoreConfig {
+  id               String @id @default("singleton")
+  workingCapital   Float  @default(315000)
+  protectedFloor   Float  @default(315000)
+  survivalTarget   Float  @default(5000.00)
+  basePendingBags  Int    @default(750)
+  legacyLoss       Float  @default(0.00)
+}
+
+model DripFeedLog {
+  id         String   @id @default(uuid())
+  bags       Int
+  rate       Float
+  bookedRate Float    @default(0.00)
+  createdAt  DateTime @default(now())
+}
