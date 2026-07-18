@@ -8,7 +8,8 @@ export async function loginAction(formData: FormData) {
   const actualKey = process.env.MASTER_ACCESS_KEY || 'shopguard123'; // Fallback if they forget to add it
 
   if (key === actualKey) {
-    cookies().set('shopguard_auth', 'authenticated', {
+    const cookieStore = await cookies();
+    cookieStore.set('shopguard_auth', 'authenticated', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -23,6 +24,7 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function logoutAction() {
-  cookies().delete('shopguard_auth');
+  const cookieStore = await cookies();
+  cookieStore.delete('shopguard_auth');
   redirect('/login');
 }
