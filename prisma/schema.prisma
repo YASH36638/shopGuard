@@ -7,12 +7,13 @@ generator client {
 }
 
 model Customer {
-  id                    String  @id @default(uuid())
+  id                    String    @id @default(uuid())
   name                  String
-  phone                 String? @unique
-  advanceWalletBalance  Float   @default(0.00)
-  legacyCementDueBags   Int     @default(0)
+  phone                 String?   @unique
+  advanceWalletBalance  Float     @default(0.00)
+  legacyCementDueBags   Int       @default(0)
   orders                Order[]
+  returns               Return[]
 }
 
 model Influencer {
@@ -24,32 +25,73 @@ model Influencer {
 }
 
 model Product {
-  id             String  @id @default(uuid())
+  id             String      @id @default(uuid())
   name           String
-  type           String  // 'INVENTORY' | 'DIRECT_INDENT'
-  phase          String  @default("DURING") // 'DURING' (construction) | 'AFTER' (construction)
+  type           String      // 'INVENTORY' | 'DIRECT_INDENT'
+  phase          String      @default("DURING") // 'DURING' | 'AFTER'
   baseCost       Float
   standardMargin Float
-  hamaliRate     Float   @default(0.00)
+  hamaliRate     Float       @default(0.00)
+  orderItems     OrderItem[]
+  returns        Return[]
 }
 
 model Order {
-  id               String      @id @default(uuid())
-  customer         Customer?   @relation(fields: [customerId], references: [id])
+  id               String       @id @default(uuid())
+  customer         Customer?    @relation(fields: [customerId], references: [id])
   customerId       String?
-  influencer       Influencer? @relation(fields: [influencerId], references: [id])
+  influencer       Influencer?  @relation(fields: [influencerId], references: [id])
   influencerId     String?
   totalAmount      Float
   grossProfit      Float
   hamaliCollected  Float
   freightCollected Float
-  revenueDuring    Float       @default(0.00)
-  revenueAfter     Float       @default(0.00)
-  profitDuring     Float       @default(0.00)
-  profitAfter      Float       @default(0.00)
-  status           String      @default("QUOTATION") // 'QUOTATION' | 'PAID_READY' | 'DISPATCHED'
-  paymentMethod    String?     // 'CASH' | 'UPI' | 'ADVANCE_WALLET'
-  createdAt        DateTime    @default(now())
+  revenueDuring    Float        @default(0.00)
+  revenueAfter     Float        @default(0.00)
+  profitDuring     Float        @default(0.00)
+  profitAfter      Float        @default(0.00)
+  status           String       @default("QUOTATION") // 'QUOTATION' | 'PAID_READY' | 'DISPATCHED' | 'CREDIT'
+  paymentMethod    String?      // 'CASH' | 'UPI' | 'ADVANCE_WALLET' | 'CREDIT'
+  items            OrderItem[]
+  payments         Payment[]
+  returns          Return[]
+  createdAt        DateTime     @default(now())
+}
+
+model OrderItem {
+  id             String  @id @default(uuid())
+  order          Order   @relation(fields: [orderId], references: [id])
+  orderId        String
+  product        Product @relation(fields: [productId], references: [id])
+  productId      String
+  quantity       Int
+  baseCost       Float
+  standardMargin Float
+  hamaliRate     Float
+  cashRate       Float
+  phase          String  @default("DURING")
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String
+  amount    Float
+  method    String
+  createdAt DateTime @default(now())
+}
+
+model Return {
+  id          String   @id @default(uuid())
+  customer    Customer @relation(fields: [customerId], references: [id])
+  customerId  String
+  order       Order?   @relation(fields: [orderId], references: [id])
+  orderId     String?
+  product     Product  @relation(fields: [productId], references: [id])
+  productId   String
+  quantity    Int
+  refundValue Float
+  createdAt   DateTime @default(now())
 }
 
 model Supplier {

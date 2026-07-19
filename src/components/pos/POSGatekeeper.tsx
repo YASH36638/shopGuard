@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { createOrderAction } from '@/app/actions/order';
 import { createProductAction } from '@/app/actions/product';
+import { createCustomer } from '@/app/actions/customer';
 
 const DEFAULT_INFLUENCERS = [
   { id: '1', name: 'Ramesh Mistri', type: 'Mason', rate: 5 },
@@ -18,18 +19,32 @@ type ProductType = {
   hamaliRate: number;
 };
 
+type CustomerType = {
+  id: string;
+  name: string;
+  phone: string | null;
+};
+
 type CartItem = ProductType & {
   cartId: string; 
   productId: string;
   quantity: number;
+  cashRate: number;
 };
 
-export default function POSGatekeeper({ initialProducts = [] }: { initialProducts: ProductType[] }) {
+export default function POSGatekeeper({ initialProducts = [], initialCustomers = [] }: { initialProducts: ProductType[], initialCustomers: CustomerType[] }) {
   const [catalog, setCatalog] = useState<ProductType[]>(initialProducts);
+  const [customers, setCustomers] = useState<CustomerType[]>(initialCustomers);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentStatus, setPaymentStatus] = useState<'PENDING' | 'PAID_CASH' | 'PAID_UPI' | 'ADVANCE_WALLET' | 'CREDIT'>('PENDING');
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Customer State
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [showNewCustomer, setShowNewCustomer] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' });
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
+
   // Influencer State
   const [selectedInfluencerId, setSelectedInfluencerId] = useState<string>('');
   const [customInfluencer, setCustomInfluencer] = useState({ name: '', type: 'Mason', rate: 0 });
@@ -65,9 +80,24 @@ export default function POSGatekeeper({ initialProducts = [] }: { initialProduct
         cartId: Math.random().toString(36).substr(2, 9),
         productId: product.id, 
         ...product,
-        quantity: 1 
+        quantity: 1,
+        cashRate: product.baseCost + product.standardMargin + product.hamaliRate
       }];
     });
+  };
+
+  const handleSaveCustomer = async () => {
+    if (!newCustomer.name.trim()) return;
+    setIsCreatingCustomer(true);
+    const res = await createCustomer(newCustomer.name, newCustomer.phone || null);
+    setIsCreatingCustomer(false);
+    if (res.success && res.customer) {
+      setCustomers(prev => [...prev, res.customer!]);
+      setSelectedCustomerId(res.customer!.id);
+      setShowNewCustomer(false);
+    } else {
+      alert("Error saving customer.");
+    }
   };
 
   const saveCustomItemToCatalog = async () => {
@@ -95,7 +125,14 @@ export default function POSGatekeeper({ initialProducts = [] }: { initialProduct
   };
 
   const updateCartItem = (cartId: string, field: keyof CartItem, value: any) => {
-    setCart(prev => prev.map(item => item.cartId === cartId ? { ...item, [field]: value } : item));
+    setCart(prev => prev.map(item => {
+      if (item.cartId === cartId) {
+        const updated = { ...item, [field]: value };
+        updated.cashRate = updated.baseCost + updated.standardMargin + updated.hamaliRate;
+        return updated;
+      }
+      return item;
+    }));
   };
 
   const removeFromCart = (cartId: string) => {
@@ -152,7 +189,20 @@ export default function POSGatekeeper({ initialProducts = [] }: { initialProduct
 
   const handleDispatch = async () => {
     setIsSaving(true);
+    
+    // Map cart items for DB
+    const items = cart.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      baseCost: item.baseCost,
+      standardMargin: item.standardMargin,
+      hamaliRate: item.hamaliRate,
+      cashRate: item.cashRate,
+      phase: item.phase,
+    }));
+
     const res = await createOrderAction({
+      customerId: selectedCustomerId || undefined,
       totalAmount: totals.spotCashTotal,
       grossProfit: totals.totalMargin,
       hamaliCollected: totals.totalHamali,
@@ -161,8 +211,10 @@ export default function POSGatekeeper({ initialProducts = [] }: { initialProduct
       revenueAfter: totals.revenueAfter,
       profitDuring: totals.profitDuring,
       profitAfter: totals.profitAfter,
-      paymentMethod: paymentStatus.replace('PAID_', '').replace('ADVANCE_WALLET', 'ADVANCE')
+      paymentMethod: paymentStatus.replace('PAID_', '').replace('ADVANCE_WALLET', 'ADVANCE'),
+      items: items
     });
+    
     setIsSaving(false);
 
     if (res.success) {
@@ -187,6 +239,7 @@ export default function POSGatekeeper({ initialProducts = [] }: { initialProduct
   const resetPOS = () => {
     setCart([]);
     setPaymentStatus('PENDING');
+    setSelectedCustomerId('');
     setSelectedInfluencerId('');
     setIsCustomInfluencer(false);
     setCustomInfluencer({ name: '', type: 'Mason', rate: 0 });
@@ -229,50 +282,104 @@ export default function POSGatekeeper({ initialProducts = [] }: { initialProduct
           <p className="text-xs text-gray-500">Fully Editable Mode + Ledger Sync</p>
         </div>
         
-        {/* Influencer Selector / Editor */}
-        <div className="flex flex-col gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-gray-500 uppercase">Attach Mason:</label>
-            <select 
-              className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-700 focus:ring-emerald-500"
-              value={isCustomInfluencer ? 'custom' : selectedInfluencerId}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === 'custom') {
-                  setIsCustomInfluencer(true);
-                  setSelectedInfluencerId('');
-                } else {
-                  setIsCustomInfluencer(false);
-                  setSelectedInfluencerId(val);
-                }
-              }}
-            >
-              <option value="">None (Direct Walk-in)</option>
-              {DEFAULT_INFLUENCERS.map(inf => (
-                <option key={inf.id} value={inf.id}>{inf.name} ({inf.type})</option>
-              ))}
-              <option value="custom">+ Add Custom Contractor</option>
-            </select>
+        <div className="flex gap-4">
+          {/* Customer Selector / Editor */}
+          <div className="flex flex-col gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-bold text-gray-500 uppercase">Customer:</label>
+              <select 
+                className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-700 focus:ring-emerald-500"
+                value={showNewCustomer ? 'new' : selectedCustomerId}
+                onChange={(e) => {
+                  if (e.target.value === 'new') {
+                    setShowNewCustomer(true);
+                    setSelectedCustomerId('');
+                  } else {
+                    setShowNewCustomer(false);
+                    setSelectedCustomerId(e.target.value);
+                  }
+                }}
+              >
+                <option value="">Walk-in (Unregistered)</option>
+                {customers.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+                <option value="new">+ Add New Customer</option>
+              </select>
+            </div>
+
+            {showNewCustomer && (
+              <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
+                <input 
+                  type="text" 
+                  placeholder="Name" 
+                  className="w-32 text-xs border border-gray-300 rounded px-2 py-1"
+                  value={newCustomer.name}
+                  onChange={e => setNewCustomer(p => ({ ...p, name: e.target.value }))}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Phone" 
+                  className="w-24 text-xs border border-gray-300 rounded px-2 py-1"
+                  value={newCustomer.phone}
+                  onChange={e => setNewCustomer(p => ({ ...p, phone: e.target.value }))}
+                />
+                <button 
+                  onClick={handleSaveCustomer}
+                  disabled={isCreatingCustomer}
+                  className="bg-emerald-600 text-white text-xs px-2 rounded font-bold"
+                >
+                  Save
+                </button>
+              </div>
+            )}
           </div>
 
-          {isCustomInfluencer && (
-            <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
-              <input 
-                type="text" 
-                placeholder="Name" 
-                className="w-32 text-xs border border-gray-300 rounded px-2 py-1"
-                value={customInfluencer.name}
-                onChange={e => setCustomInfluencer(p => ({ ...p, name: e.target.value }))}
-              />
-              <input 
-                type="number" 
-                placeholder="₹/item" 
-                className="w-20 text-xs border border-gray-300 rounded px-2 py-1"
-                value={customInfluencer.rate || ''}
-                onChange={e => setCustomInfluencer(p => ({ ...p, rate: Number(e.target.value) }))}
-              />
+          {/* Influencer Selector / Editor */}
+          <div className="flex flex-col gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-bold text-gray-500 uppercase">Attach Mason:</label>
+              <select 
+                className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-700 focus:ring-emerald-500"
+                value={isCustomInfluencer ? 'custom' : selectedInfluencerId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'custom') {
+                    setIsCustomInfluencer(true);
+                    setSelectedInfluencerId('');
+                  } else {
+                    setIsCustomInfluencer(false);
+                    setSelectedInfluencerId(val);
+                  }
+                }}
+              >
+                <option value="">None (Direct Walk-in)</option>
+                {DEFAULT_INFLUENCERS.map(inf => (
+                  <option key={inf.id} value={inf.id}>{inf.name} ({inf.type})</option>
+                ))}
+                <option value="custom">+ Add Custom Contractor</option>
+              </select>
             </div>
-          )}
+
+            {isCustomInfluencer && (
+              <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
+                <input 
+                  type="text" 
+                  placeholder="Name" 
+                  className="w-32 text-xs border border-gray-300 rounded px-2 py-1"
+                  value={customInfluencer.name}
+                  onChange={e => setCustomInfluencer(p => ({ ...p, name: e.target.value }))}
+                />
+                <input 
+                  type="number" 
+                  placeholder="₹/item" 
+                  className="w-20 text-xs border border-gray-300 rounded px-2 py-1"
+                  value={customInfluencer.rate || ''}
+                  onChange={e => setCustomInfluencer(p => ({ ...p, rate: Number(e.target.value) }))}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

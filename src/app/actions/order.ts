@@ -13,10 +13,21 @@ export async function createOrderAction(data: {
   profitDuring: number;
   profitAfter: number;
   paymentMethod: string;
+  customerId?: string;
+  items: Array<{
+    productId: string;
+    quantity: number;
+    baseCost: number;
+    standardMargin: number;
+    hamaliRate: number;
+    cashRate: number;
+    phase: string;
+  }>;
 }) {
   try {
     const order = await prisma.order.create({
       data: {
+        customer: data.customerId ? { connect: { id: data.customerId } } : undefined,
         totalAmount: data.totalAmount,
         grossProfit: data.grossProfit,
         hamaliCollected: data.hamaliCollected,
@@ -25,11 +36,32 @@ export async function createOrderAction(data: {
         revenueAfter: data.revenueAfter,
         profitDuring: data.profitDuring,
         profitAfter: data.profitAfter,
-        status: 'DISPATCHED',
+        status: data.paymentMethod === 'CREDIT' ? 'CREDIT' : 'DISPATCHED',
         paymentMethod: data.paymentMethod,
+        items: {
+          create: data.items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            baseCost: item.baseCost,
+            standardMargin: item.standardMargin,
+            hamaliRate: item.hamaliRate,
+            cashRate: item.cashRate,
+            phase: item.phase
+          }))
+        }
       }
     });
-    
+
+    if (data.paymentMethod !== 'CREDIT') {
+      await prisma.payment.create({
+        data: {
+          orderId: order.id,
+          amount: data.totalAmount,
+          method: data.paymentMethod
+        }
+      });
+    }
+
     // Automatically add gross profit to working capital
     const config = await prisma.storeConfig.findUnique({ where: { id: 'singleton' } });
     if (config) {
@@ -48,12 +80,40 @@ export async function createOrderAction(data: {
     }
     
     revalidatePath('/ledger');
+    if (data.customerId) revalidatePath(`/customer/${data.customerId}`);
     revalidatePath('/');
     
     return { success: true, orderId: order.id };
   } catch (error) {
     console.error("Error creating order:", error);
     return { success: false, error: 'Failed to save order' };
+  }
+}
+
+export async function processPayment(orderId: string, amount: number, method: string) {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: orderId }, include: { payments: true } });
+    if (!order) return { success: false, error: 'Order not found' };
+
+    await prisma.payment.create({
+      data: { orderId, amount, method }
+    });
+
+    const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0) + amount;
+    
+    if (totalPaid >= order.totalAmount) {
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { status: 'DISPATCHED' }
+      });
+    }
+
+    revalidatePath(`/order/${orderId}`);
+    revalidatePath('/ledger');
+    return { success: true };
+  } catch (error) {
+    console.error('Payment error:', error);
+    return { success: false, error: 'Failed to process payment' };
   }
 }
 

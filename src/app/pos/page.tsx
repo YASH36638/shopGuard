@@ -1,9 +1,11 @@
 import POSGatekeeper from '@/components/pos/POSGatekeeper';
 import Link from 'next/link';
 import { getProducts } from '@/app/actions/product';
+import { getCustomers } from '@/app/actions/customer';
 
 export default async function POSPage() {
   const products = await getProducts();
+  const customers = await getCustomers();
 
   return (
     <main className="min-h-screen bg-gray-50 p-4 md:p-6 flex flex-col h-screen">
@@ -23,7 +25,7 @@ export default async function POSPage() {
       </header>
 
       <section className="flex-1 min-h-0">
-        <POSGatekeeper initialProducts={products} />
+        <POSGatekeeper initialProducts={products} initialCustomers={customers} />
       </section>
     </main>
   );
