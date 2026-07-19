@@ -62,26 +62,28 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 {order.items.length === 0 ? (
                   <div className="text-center text-gray-400 py-4 italic text-sm">No items logged (Legacy Order)</div>
                 ) : (
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead>
-                      <tr>
-                        <th className="text-left text-xs font-bold text-gray-500 pb-2">Product</th>
-                        <th className="text-right text-xs font-bold text-gray-500 pb-2">Qty</th>
-                        <th className="text-right text-xs font-bold text-gray-500 pb-2">Rate</th>
-                        <th className="text-right text-xs font-bold text-gray-500 pb-2">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {order.items.map(item => (
-                        <tr key={item.id}>
-                          <td className="py-2 text-sm font-bold text-gray-800">{item.product?.name || 'Unknown'}</td>
-                          <td className="py-2 text-sm text-gray-600 text-right">{item.quantity}</td>
-                          <td className="py-2 text-sm text-gray-600 text-right">₹{item.cashRate}</td>
-                          <td className="py-2 text-sm font-bold text-gray-900 text-right">₹{(item.cashRate * item.quantity).toLocaleString('en-IN')}</td>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead>
+                        <tr>
+                          <th className="text-left text-xs font-bold text-gray-500 pb-2">Product</th>
+                          <th className="text-right text-xs font-bold text-gray-500 pb-2">Qty</th>
+                          <th className="text-right text-xs font-bold text-gray-500 pb-2">Rate</th>
+                          <th className="text-right text-xs font-bold text-gray-500 pb-2">Total</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {order.items.map(item => (
+                          <tr key={item.id}>
+                            <td className="py-2 text-sm font-bold text-gray-800 whitespace-nowrap">{item.product?.name || 'Unknown'}</td>
+                            <td className="py-2 text-sm text-gray-600 text-right whitespace-nowrap">{item.quantity}</td>
+                            <td className="py-2 text-sm text-gray-600 text-right whitespace-nowrap">₹{item.cashRate}</td>
+                            <td className="py-2 text-sm font-bold text-gray-900 text-right whitespace-nowrap">₹{(item.cashRate * item.quantity).toLocaleString('en-IN')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
                 
                 {order.returns && order.returns.length > 0 && (

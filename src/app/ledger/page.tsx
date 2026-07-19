@@ -29,12 +29,12 @@ export default async function LedgerPage() {
       <div className="max-w-7xl mx-auto space-y-8">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-              <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-              </Link>
-              Analysis Sheet
-            </h1>
+            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+            <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            </Link>
+            All Bills (Khata)
+          </h1>
             <p className="text-sm text-gray-500 font-medium mt-1 ml-11">Detailed month-by-month financial ledger and profit analysis.</p>
           </div>
         </header>

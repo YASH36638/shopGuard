@@ -276,17 +276,17 @@ export default function POSGatekeeper({ initialProducts = [], initialCustomers =
         </div>
       )}
 
-      <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl flex justify-between items-start flex-wrap gap-3">
+      <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl flex flex-col sm:flex-row justify-between items-start gap-3">
         <div>
-          <h2 className="text-lg font-bold text-gray-800">Cash & Carry POS</h2>
-          <p className="text-xs text-gray-500">Fully Editable Mode + Ledger Sync</p>
+          <h2 className="text-lg font-bold text-gray-800">New Bill (POS)</h2>
+          <p className="text-xs text-gray-500">Create bill & sync to Khata</p>
         </div>
         
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           {/* Customer Selector / Editor */}
           <div className="flex flex-col gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center gap-2">
-              <label className="text-xs font-bold text-gray-500 uppercase">Customer:</label>
+              <label className="text-xs font-bold text-gray-500 uppercase">Select Customer:</label>
               <select 
                 className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-700 focus:ring-emerald-500"
                 value={showNewCustomer ? 'new' : selectedCustomerId}
@@ -338,7 +338,7 @@ export default function POSGatekeeper({ initialProducts = [], initialCustomers =
           {/* Influencer Selector / Editor */}
           <div className="flex flex-col gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center gap-2">
-              <label className="text-xs font-bold text-gray-500 uppercase">Attach Mason:</label>
+              <label className="text-xs font-bold text-gray-500 uppercase">Add Mistri/Contractor:</label>
               <select 
                 className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-700 focus:ring-emerald-500"
                 value={isCustomInfluencer ? 'custom' : selectedInfluencerId}
@@ -387,7 +387,7 @@ export default function POSGatekeeper({ initialProducts = [], initialCustomers =
         {/* Product Selection */}
         <div className="lg:w-1/3 p-4 border-r border-gray-200 flex flex-col min-h-0">
           <div className="mb-3">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Product Catalog</h3>
+            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Items List</h3>
             <div className="flex gap-2 mb-3">
               <input 
                 type="text" 
@@ -460,7 +460,7 @@ export default function POSGatekeeper({ initialProducts = [], initialCustomers =
             )}
           </div>
           
-          <div className="grid grid-cols-1 gap-3 overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-3 overflow-y-auto pr-1 max-h-64 lg:max-h-none">
             {filteredProducts.map(p => (
               <button 
                 key={p.id}
@@ -482,7 +482,7 @@ export default function POSGatekeeper({ initialProducts = [], initialCustomers =
 
         {/* Cart & Checkout */}
         <div className="flex-1 flex flex-col bg-gray-50 min-h-0">
-          <div className="flex-1 p-4 overflow-y-auto">
+          <div className="flex-1 p-4 overflow-y-auto max-h-96 lg:max-h-none">
             <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Editable Cart Items</h3>
             {cart.length === 0 ? (
               <div className="text-center text-gray-400 text-sm py-10">Cart is empty. Select products to begin billing.</div>
@@ -507,42 +507,42 @@ export default function POSGatekeeper({ initialProducts = [], initialCustomers =
                       />
                     </div>
                     
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase">Quantity</label>
+                        <label className="block text-[9px] md:text-[10px] font-bold text-gray-400 uppercase">Quantity</label>
                         <input 
                           type="number" 
                           min="1"
                           value={item.quantity}
                           onChange={(e) => updateCartItem(item.cartId, 'quantity', Number(e.target.value))}
-                          className="w-full text-sm font-bold border-b border-gray-300 focus:border-emerald-500 focus:outline-none py-1 bg-gray-50 px-2 rounded-t-sm"
+                          className="w-full text-xs md:text-sm font-bold border-b border-gray-300 focus:border-emerald-500 focus:outline-none py-1 bg-gray-50 px-1 md:px-2 rounded-t-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase">Base Cost (₹)</label>
+                        <label className="block text-[9px] md:text-[10px] font-bold text-gray-400 uppercase">Base (₹)</label>
                         <input 
                           type="number" 
                           value={item.baseCost}
                           onChange={(e) => updateCartItem(item.cartId, 'baseCost', Number(e.target.value))}
-                          className="w-full text-sm border-b border-gray-300 focus:border-emerald-500 focus:outline-none py-1 bg-gray-50 px-2 rounded-t-sm"
+                          className="w-full text-xs md:text-sm border-b border-gray-300 focus:border-emerald-500 focus:outline-none py-1 bg-gray-50 px-1 md:px-2 rounded-t-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase">Margin (₹)</label>
+                        <label className="block text-[9px] md:text-[10px] font-bold text-gray-400 uppercase">Margin (₹)</label>
                         <input 
                           type="number" 
                           value={item.standardMargin}
                           onChange={(e) => updateCartItem(item.cartId, 'standardMargin', Number(e.target.value))}
-                          className="w-full text-sm border-b border-gray-300 focus:border-emerald-500 focus:outline-none py-1 bg-gray-50 px-2 rounded-t-sm"
+                          className="w-full text-xs md:text-sm border-b border-gray-300 focus:border-emerald-500 focus:outline-none py-1 bg-gray-50 px-1 md:px-2 rounded-t-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase">Hamali (₹)</label>
+                        <label className="block text-[9px] md:text-[10px] font-bold text-gray-400 uppercase">Hamali (₹)</label>
                         <input 
                           type="number" 
                           value={item.hamaliRate}
                           onChange={(e) => updateCartItem(item.cartId, 'hamaliRate', Number(e.target.value))}
-                          className="w-full text-sm border-b border-gray-300 focus:border-emerald-500 focus:outline-none py-1 bg-gray-50 px-2 rounded-t-sm"
+                          className="w-full text-xs md:text-sm border-b border-gray-300 focus:border-emerald-500 focus:outline-none py-1 bg-gray-50 px-1 md:px-2 rounded-t-sm"
                         />
                       </div>
                     </div>
@@ -557,11 +557,11 @@ export default function POSGatekeeper({ initialProducts = [], initialCustomers =
             {/* Two-Tier Pricer */}
             <div className="mb-4 space-y-2">
               <div className="flex justify-between items-center text-gray-500">
-                <span className="text-sm line-through">Standard Ledger Rate</span>
+                <span className="text-sm line-through">Total Amount</span>
                 <span className="text-sm line-through">₹{totals.standardLedgerTotal.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-bold text-emerald-600">Spot Cash/UPI Discount</span>
+                <span className="text-sm font-bold text-emerald-600">Cash Discount</span>
                 <span className="text-sm font-bold text-emerald-600">-₹{totals.cashDiscount.toLocaleString('en-IN')}</span>
               </div>
               
@@ -575,7 +575,7 @@ export default function POSGatekeeper({ initialProducts = [], initialCustomers =
               
               {/* All-In Landed Quote */}
               <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                <span className="text-lg font-black text-gray-800">Final Landed Rate</span>
+                <span className="text-lg font-black text-gray-800">Final Bill Amount</span>
                 <span className="text-2xl font-black text-gray-900">₹{totals.spotCashTotal.toLocaleString('en-IN')}</span>
               </div>
             </div>
@@ -633,7 +633,7 @@ export default function POSGatekeeper({ initialProducts = [], initialCustomers =
               ) : (
                 <>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                  PRINT CHALLAN & DISPATCH
+                  SAVE BILL & PRINT
                 </>
               )}
             </button>

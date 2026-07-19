@@ -75,36 +75,43 @@ export async function processReturn(customerId: string, orderId: string | null, 
       });
 
       if (orderItem) {
-        const profitToReverse = orderItem.standardMargin * quantity;
+        const originalProfitToReverse = orderItem.standardMargin * quantity;
+        const penaltyKept = (orderItem.cashRate * quantity) - refundValue;
+        const netProfitAdjustment = penaltyKept - originalProfitToReverse;
         
-        const updateData: any = {
-          grossProfit: { decrement: profitToReverse },
-        };
+        const updateData: any = {};
         
-        if (orderItem.phase === 'DURING') {
-          updateData.profitDuring = { decrement: profitToReverse };
-        } else {
-          updateData.profitAfter = { decrement: profitToReverse };
+        if (netProfitAdjustment !== 0) {
+          updateData.grossProfit = { increment: netProfitAdjustment };
+          if (orderItem.phase === 'DURING') {
+            updateData.profitDuring = { increment: netProfitAdjustment };
+          } else {
+            updateData.profitAfter = { increment: netProfitAdjustment };
+          }
         }
 
-        await prisma.order.update({
-          where: { id: orderId },
-          data: updateData
-        });
+        if (Object.keys(updateData).length > 0) {
+          await prisma.order.update({
+            where: { id: orderId },
+            data: updateData
+          });
 
-        await prisma.storeConfig.update({
-          where: { id: 'singleton' },
-          data: { workingCapital: { decrement: profitToReverse } }
-        });
+          await prisma.storeConfig.update({
+            where: { id: 'singleton' },
+            data: { workingCapital: { increment: netProfitAdjustment } }
+          });
+        }
       }
     } else {
       const product = await prisma.product.findUnique({ where: { id: productId } });
       if (product) {
-        const profitToReverse = product.standardMargin * quantity;
-        await prisma.storeConfig.update({
-          where: { id: 'singleton' },
-          data: { workingCapital: { decrement: profitToReverse } }
-        });
+        const netProfitAdjustment = (product.baseCost * quantity) - refundValue;
+        if (netProfitAdjustment !== 0) {
+          await prisma.storeConfig.update({
+            where: { id: 'singleton' },
+            data: { workingCapital: { increment: netProfitAdjustment } }
+          });
+        }
       }
     }
     

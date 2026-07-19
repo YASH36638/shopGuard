@@ -24,7 +24,7 @@ export default function PaymentForm({ orderId, maxAmount }: { orderId: string, m
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
       <input 
         type="number" 
         value={amount} 

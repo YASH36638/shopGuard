@@ -5,15 +5,15 @@ export default function LogisticsOffsetWidget({ hamaliCollected, freightCollecte
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col gap-4">
-      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Labor & Freight Offset</h2>
+      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Extra Charges (Hamali/Bhada)</h2>
       
       <div className="flex gap-4">
         <div className="flex-1 bg-gray-50 p-3 rounded-lg border border-gray-100">
-          <div className="text-xs text-gray-500 mb-1">Hamali Collected</div>
+          <div className="text-xs text-gray-500 mb-1">Hamali</div>
           <div className="text-lg font-bold text-gray-800">₹{hamaliCollected.toLocaleString('en-IN')}</div>
         </div>
         <div className="flex-1 bg-gray-50 p-3 rounded-lg border border-gray-100">
-          <div className="text-xs text-gray-500 mb-1">Freight Collected</div>
+          <div className="text-xs text-gray-500 mb-1">Freight (Bhada)</div>
           <div className="text-lg font-bold text-gray-800">₹{freightCollected.toLocaleString('en-IN')}</div>
         </div>
       </div>

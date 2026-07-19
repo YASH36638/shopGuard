@@ -10,7 +10,7 @@ export default async function POSPage() {
   const customers = await getCustomers();
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 md:p-6 flex flex-col h-screen">
+    <main className="min-h-screen bg-gray-50 p-4 md:p-6 flex flex-col lg:h-screen">
       <header className="flex justify-between items-center mb-6 shrink-0">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">

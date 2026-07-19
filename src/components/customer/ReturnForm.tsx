@@ -9,6 +9,7 @@ type Product = {
 
 type OrderType = {
   id: string;
+  items?: { productId: string }[];
 };
 
 export default function ReturnForm({ customerId, products, orders = [] }: { customerId: string, products: Product[], orders?: OrderType[] }) {
@@ -18,6 +19,11 @@ export default function ReturnForm({ customerId, products, orders = [] }: { cust
   const [refundValue, setRefundValue] = useState<number | ''>('');
   const [isSaving, setIsSaving] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  const selectedOrder = orders.find(o => o.id === orderId);
+  const availableProducts = selectedOrder && selectedOrder.items
+    ? products.filter(p => selectedOrder.items!.some(item => item.productId === p.id))
+    : products;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +63,10 @@ export default function ReturnForm({ customerId, products, orders = [] }: { cust
         {orders.length > 0 && (
           <select 
             value={orderId} 
-            onChange={e => setOrderId(e.target.value)}
+            onChange={e => {
+              setOrderId(e.target.value);
+              setProductId(''); // Reset product selection when order changes
+            }}
             className="w-full px-3 py-2 border border-red-200 rounded focus:outline-none text-sm"
           >
             <option value="">No Specific Order (General Return)</option>
@@ -72,7 +81,7 @@ export default function ReturnForm({ customerId, products, orders = [] }: { cust
           required
         >
           <option value="">Select Material...</option>
-          {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {availableProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         
         <input 

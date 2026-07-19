@@ -33,9 +33,7 @@ export default function SurvivalTargetTracker({ currentProfit, initialTarget }: 
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-4 h-full">
       <div className="flex justify-between items-end">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Daily Survival Target</h2>
-          </div>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Today's Goal (Galla)</h2>
           <div className="text-3xl font-bold text-gray-800 mt-1">₹{current.toLocaleString('en-IN')}</div>
         </div>
         <div className="text-right">
