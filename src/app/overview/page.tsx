@@ -1,5 +1,8 @@
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { getStoreConfig } from '@/app/actions/dashboard';
 
 export default async function YearlyOverviewPage() {

@@ -1,5 +1,8 @@
 import SupplierIcebox from '@/components/legacy/SupplierIcebox';
 import DripFeedDispatcher from '@/components/legacy/DripFeedDispatcher';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import Link from 'next/link';
 import { getSupplier, getDripFeedStats } from '@/app/actions/dashboard';
 import prisma from '@/lib/prisma';

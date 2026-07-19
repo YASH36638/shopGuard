@@ -7,8 +7,13 @@ type Product = {
   name: string;
 };
 
-export default function ReturnForm({ customerId, products }: { customerId: string, products: Product[] }) {
+type OrderType = {
+  id: string;
+};
+
+export default function ReturnForm({ customerId, products, orders = [] }: { customerId: string, products: Product[], orders?: OrderType[] }) {
   const [productId, setProductId] = useState('');
+  const [orderId, setOrderId] = useState('');
   const [quantity, setQuantity] = useState<number | ''>('');
   const [refundValue, setRefundValue] = useState<number | ''>('');
   const [isSaving, setIsSaving] = useState(false);
@@ -19,11 +24,12 @@ export default function ReturnForm({ customerId, products }: { customerId: strin
     if (!productId || !quantity || quantity <= 0 || refundValue === '') return;
     
     setIsSaving(true);
-    const res = await processReturn(customerId, null, productId, Number(quantity), Number(refundValue));
+    const res = await processReturn(customerId, orderId || null, productId, Number(quantity), Number(refundValue));
     setIsSaving(false);
 
     if (res.success) {
       setProductId('');
+      setOrderId('');
       setQuantity('');
       setRefundValue('');
       setIsOpen(false);
@@ -37,7 +43,7 @@ export default function ReturnForm({ customerId, products }: { customerId: strin
     return (
       <button 
         onClick={() => setIsOpen(true)}
-        className="text-xs bg-red-50 text-red-600 hover:bg-red-100 font-bold px-3 py-2 rounded transition-colors"
+        className="text-xs bg-red-50 text-red-600 hover:bg-red-100 font-bold px-3 py-2 rounded transition-colors w-full"
       >
         + Log Excess Material Return
       </button>
@@ -48,10 +54,21 @@ export default function ReturnForm({ customerId, products }: { customerId: strin
     <div className="bg-red-50 p-4 rounded-lg border border-red-100">
       <h4 className="text-sm font-bold text-red-800 mb-3">Process Material Return</h4>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        {orders.length > 0 && (
+          <select 
+            value={orderId} 
+            onChange={e => setOrderId(e.target.value)}
+            className="w-full px-3 py-2 border border-red-200 rounded focus:outline-none text-sm"
+          >
+            <option value="">No Specific Order (General Return)</option>
+            {orders.map(o => <option key={o.id} value={o.id}>Order: {o.id.slice(0,8)}</option>)}
+          </select>
+        )}
+
         <select 
           value={productId} 
           onChange={e => setProductId(e.target.value)}
-          className="flex-1 px-3 py-2 border border-red-200 rounded focus:outline-none text-sm"
+          className="w-full px-3 py-2 border border-red-200 rounded focus:outline-none text-sm"
           required
         >
           <option value="">Select Material...</option>
@@ -76,11 +93,11 @@ export default function ReturnForm({ customerId, products }: { customerId: strin
           required
         />
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 pt-1">
           <button 
             type="submit" 
             disabled={isSaving || !productId || !quantity || refundValue === ''}
-            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50 text-sm"
+            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50 text-sm flex-1"
           >
             {isSaving ? 'Processing...' : 'Confirm'}
           </button>

@@ -69,10 +69,48 @@ export async function processReturn(customerId: string, orderId: string | null, 
       }
     });
     
-    // Optionally deduct from a balance or log it
+    if (orderId) {
+      const orderItem = await prisma.orderItem.findFirst({
+        where: { orderId, productId }
+      });
+
+      if (orderItem) {
+        const profitToReverse = orderItem.standardMargin * quantity;
+        
+        const updateData: any = {
+          grossProfit: { decrement: profitToReverse },
+        };
+        
+        if (orderItem.phase === 'DURING') {
+          updateData.profitDuring = { decrement: profitToReverse };
+        } else {
+          updateData.profitAfter = { decrement: profitToReverse };
+        }
+
+        await prisma.order.update({
+          where: { id: orderId },
+          data: updateData
+        });
+
+        await prisma.storeConfig.update({
+          where: { id: 'singleton' },
+          data: { workingCapital: { decrement: profitToReverse } }
+        });
+      }
+    } else {
+      const product = await prisma.product.findUnique({ where: { id: productId } });
+      if (product) {
+        const profitToReverse = product.standardMargin * quantity;
+        await prisma.storeConfig.update({
+          where: { id: 'singleton' },
+          data: { workingCapital: { decrement: profitToReverse } }
+        });
+      }
+    }
     
     revalidatePath(`/customer/${customerId}`);
     revalidatePath('/ledger');
+    if (orderId) revalidatePath(`/order/${orderId}`);
     return { success: true, return: ret };
   } catch (error) {
     console.error('Failed to process return:', error);

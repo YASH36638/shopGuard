@@ -1,5 +1,8 @@
 import DailyScoreboard from '@/components/dashboard/DailyScoreboard';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50 p-6 md:p-10">

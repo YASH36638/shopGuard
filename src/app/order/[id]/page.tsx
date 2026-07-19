@@ -14,6 +14,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       },
       payments: {
         orderBy: { createdAt: 'desc' }
+      },
+      returns: {
+        include: { product: true },
+        orderBy: { createdAt: 'desc' }
       }
     }
   });
@@ -21,7 +25,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   if (!order) return notFound();
 
   const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0);
-  const balance = Math.max(0, order.totalAmount - totalPaid);
+  const totalReturned = order.returns?.reduce((sum, r) => sum + r.refundValue, 0) || 0;
+  
+  const balance = Math.max(0, order.totalAmount - totalPaid - totalReturned);
 
   return (
     <main className="min-h-screen bg-gray-50 p-6 md:p-10">
@@ -76,6 +82,22 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                       ))}
                     </tbody>
                   </table>
+                )}
+                
+                {order.returns && order.returns.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <h3 className="text-xs font-bold text-red-600 uppercase mb-2">Returns Processed for this Bill</h3>
+                    <div className="space-y-2">
+                      {order.returns.map(ret => (
+                        <div key={ret.id} className="flex justify-between text-sm bg-red-50 p-2 rounded">
+                          <span className="font-bold text-red-800">
+                            - {ret.quantity}x {ret.product?.name || 'Item'}
+                          </span>
+                          <span className="font-bold text-red-600">-₹{ret.refundValue.toLocaleString('en-IN')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -134,9 +156,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <span className="text-gray-500">Gross Amount</span>
                   <span className="font-bold text-gray-800">₹{order.totalAmount.toLocaleString('en-IN')}</span>
                 </div>
+                {totalReturned > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Returns</span>
+                    <span className="font-bold text-blue-600">-₹{totalReturned.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-500">Total Paid</span>
-                  <span className="font-bold text-emerald-600">₹{totalPaid.toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-emerald-600">-₹{totalPaid.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-gray-100">
                   <span className="text-gray-500">Balance Due</span>

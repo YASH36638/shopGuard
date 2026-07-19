@@ -2,6 +2,9 @@ import prisma from '@/lib/prisma';
 import Link from 'next/link';
 import LedgerClientTable from '@/components/ledger/LedgerClientTable';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function LedgerPage() {
   const orders = await prisma.order.findMany({
     include: {

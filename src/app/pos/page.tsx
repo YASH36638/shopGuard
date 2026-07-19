@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { getProducts } from '@/app/actions/product';
 import { getCustomers } from '@/app/actions/customer';
 
+export const dynamic = 'force-dynamic';
+
 export default async function POSPage() {
   const products = await getProducts();
   const customers = await getCustomers();

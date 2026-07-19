@@ -100,7 +100,7 @@ export default async function CustomerHubPage({ params }: { params: Promise<{ id
                 <h2 className="text-sm font-bold text-red-900 uppercase tracking-wider">Material Returns</h2>
               </div>
               <div className="p-4 space-y-4">
-                <ReturnForm customerId={customer.id} products={products} />
+                <ReturnForm customerId={customer.id} products={products} orders={customer.orders} />
                 
                 {customer.returns.length > 0 && (
                   <div className="pt-4 border-t border-gray-100 space-y-3">

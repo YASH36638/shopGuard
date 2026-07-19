@@ -28,8 +28,10 @@ export async function updateWorkingCapital(amount: number) {
 
 // Fetch all orders for today to calculate real daily profit
 export async function getTodayStats() {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const istDateString = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  const [month, day, year] = istDateString.split('/');
+  const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+05:30`);
 
   const orders = await prisma.order.findMany({
     where: {
